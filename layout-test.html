@@ -1,0 +1,49 @@
+<template name="LayoutOne">
+  one
+</template>
+
+<template name="LayoutTwo">
+  two
+</template>
+
+<template name="LayoutWithData">
+  layout {{title}}
+</template>
+
+<template name="LayoutWithDataAndYields">
+  layout {{title}}
+  {{> yield}}
+  {{> yield region="footer"}}
+</template>
+
+<template name="LayoutWithOneYield">
+layout
+{{> yield}}
+</template>
+
+<template name="LayoutWithTwoYields">
+{{> yield}}
+{{> yield region="footer"}}
+</template>
+
+<template name="ChildWithData">
+child {{title}}
+</template>
+
+<template name="FooterWithData">
+footer {{title}}
+</template>
+
+<template name="One">
+  one
+</template>
+
+<template name="Two">
+  two
+</template>
+
+<template name="DefaultMainRegion">
+  {{#Layout}}
+    ok
+  {{/Layout}}
+</template>
