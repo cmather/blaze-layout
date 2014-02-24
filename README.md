@@ -4,6 +4,8 @@ A Meteor Blaze powered Layout component for dynamic rendering and data. Its majo
 2. Define yield regions to dynamically render templates into.
 3. Never re-render templates if it doesn't have to.
 
+**NOTE: Requires shark branch of Meteor**
+
 ### Usage in Templates
 
 ```html
