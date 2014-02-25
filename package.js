@@ -7,8 +7,9 @@ Package.on_use(function (api) {
   api.use('templating');
   api.use('ui');
   api.use('reactive-dict');
-  api.add_files('layout.js', 'client');
+  api.use('underscore');
 
+  api.add_files('layout.js', 'client');
   api.export('Layout', 'client');
 });
 

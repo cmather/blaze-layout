@@ -56,6 +56,8 @@ Layout = UI.Component.extend({
       if (arguments.length < 2) {
         value = key;
         key = 'main';
+      } else if (typeof key === 'undefined') {
+        key = 'main';
       }
 
       regions.set(key, value);
@@ -63,7 +65,7 @@ Layout = UI.Component.extend({
 
     //TODO add test
     this.getRegionKeys = function () {
-      return _.keys(region.keys);
+      return _.keys(regions.keys);
     };
 
     //TODO add test
@@ -144,7 +146,7 @@ BlazeUIManager = function (router) {
   this.router = router;
   this.layout = null;
 
-  _.each(['setRegion', 'clearRegion', 'template', 'data'], function (method) {
+  _.each(['setRegion', 'clearRegion', 'getRegionKeys', 'template', 'data'], function (method) {
     self[method] = function () {
       if (self.layout) {
         return self.layout[method].apply(this, arguments);
@@ -165,7 +167,7 @@ BlazeUIManager.prototype = {
 };
 
 if (Package['iron-router']) {
-  Router.setUIManager(function (router) {
+  Package['iron-router'].Router.setUIManager(function (router) {
     return new BlazeUIManager(router);
   });
 }
