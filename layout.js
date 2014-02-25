@@ -61,6 +61,16 @@ Layout = UI.Component.extend({
       regions.set(key, value);
     };
 
+    //TODO add test
+    this.getRegionKeys = function () {
+      return _.keys(region.keys);
+    };
+
+    //TODO add test
+    this.clearRegion = function (key) {
+      regions.set(key, null);
+    };
+
     this.yield = UI.Component.extend({
       init: function () {
         var data = this.get();
@@ -129,12 +139,12 @@ Layout = UI.Component.extend({
  */
 Template.Layout = Layout;
 
-RouterLayoutManager = function (router) {
+BlazeUIManager = function (router) {
   var self = this;
   this.router = router;
   this.layout = null;
 
-  _.each(['setRegion', 'template', 'data'], function (method) {
+  _.each(['setRegion', 'clearRegion', 'template', 'data'], function (method) {
     self[method] = function () {
       if (self.layout) {
         return self.layout[method].apply(this, arguments);
@@ -143,7 +153,7 @@ RouterLayoutManager = function (router) {
   });
 };
 
-RouterLayoutManager.prototype = {
+BlazeUIManager.prototype = {
   render: function (props) {
     this.layout = UI.render(Layout.extend(props || {}));
     return this.layout;
@@ -155,7 +165,7 @@ RouterLayoutManager.prototype = {
 };
 
 if (Package['iron-router']) {
-  Router.setLayoutManager(function (router) {
-    return new RouterLayoutManager(router);
+  Router.setUIManager(function (router) {
+    return new BlazeUIManager(router);
   });
 }
