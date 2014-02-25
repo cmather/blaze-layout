@@ -144,21 +144,28 @@ Template.Layout = Layout;
 BlazeUIManager = function (router) {
   var self = this;
   this.router = router;
-  this.layout = null;
+  this._component = null;
 
-  _.each(['setRegion', 'clearRegion', 'getRegionKeys', 'template', 'data'], function (method) {
+  _.each(['setRegion', 'clearRegion', 'getRegionKeys', 'data'], function (method) {
     self[method] = function () {
-      if (self.layout) {
-        return self.layout[method].apply(this, arguments);
+      if (self._component) {
+        return self._component[method].apply(this, arguments);
       }
     };
   });
+
+  // proxy the "layout" method to the underlying component's
+  // "template" method.
+  self.layout = function () {
+    if (self._component)
+      return self._component.template.apply(this, arguments);
+  };
 };
 
 BlazeUIManager.prototype = {
   render: function (props) {
-    this.layout = UI.render(Layout.extend(props || {}));
-    return this.layout;
+    this._component = UI.render(Layout.extend(props || {}));
+    return this._component;
   },
 
   insert: function (parent) {
@@ -167,7 +174,7 @@ BlazeUIManager.prototype = {
 };
 
 if (Package['iron-router']) {
-  Package['iron-router'].Router.setUIManager(function (router) {
-    return new BlazeUIManager(router);
+  Package['iron-router'].Router.configure({
+    uiManager: new BlazeUIManager
   });
 }
