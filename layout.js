@@ -26,7 +26,7 @@ Layout = UI.Component.extend({
     */
 
     this.template = function (value) {
-      if (value && value != tmpl) {
+      if (typeof value !== 'undefined' && value != tmpl) {
         tmpl = value;
         tmplDep.changed();
       } else {
@@ -36,7 +36,7 @@ Layout = UI.Component.extend({
     };
 
     this.data = function (value) {
-      if (value && !EJSON.equals(value, data)) {
+      if (typeof value !== 'undefined' && !EJSON.equals(value, data)) {
         data = value;
         dataDep.changed();
       } else {
@@ -127,7 +127,8 @@ Layout = UI.Component.extend({
     // computation. so if the template changes
     // the layout is re-endered.
     return function () {
-      return self.lookupTemplate(self.template());
+      var tmplName = self.template();
+      return self.lookupTemplate(tmplName);
     };
   }
 });
