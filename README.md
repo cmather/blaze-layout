@@ -2,7 +2,7 @@ A Meteor Blaze powered Layout component for dynamic rendering and data. Its majo
 
 1. Dynamically set the layout template and data context.
 2. Define yield regions to dynamically render templates into.
-3. Never re-render templates if it doesn't have to.
+3. Never re-render templates unless they change
 
 **NOTE: Requires shark branch of Meteor**
 
@@ -56,23 +56,26 @@ layout.setRegion('footer', 'SomeFooterTemplate');
 ```
 
 ### Integration with IronRouter
-IronRouter is currently being enhanced to enable a pluggable layout manager. This will allow users to use the old Shark layout manager, the new blaze-layout component, or even another package entirely. The API is in flux. But, if the iron-router package is defined, the blaze-layout package will register its own LayoutManager with IronRouter like this:
+The IronRouter blaze-integration branch has been enhanced to allow a pluggable
+ui manager. This will allow users to use the old Shark ui manager, the
+blaze-layout manager, or even another one entirely. This package registers
+itself with IronRouter like this:
 
 ```javascript
-  Router.setLayoutManager(function () {
-    return new LayoutManager;
+  Package['iron-router'].Router.configure({
+    uiManager: new BlazeUIManager
   });
 ```
 
-This will return a LayoutManager object that uses the Layout component under the hood. But the LayoutManager implements the API required by IronRouter. Specifically, the API looks like this:
+The API contract between iron-router and any ui manager looks like this:
 
 ```javascript
 LayoutManager.prototype = {
   data: function (value) { ... },
   setRegion: function (key, value) { ... },
+  clearRegion: function (key) { ... },
   render: function () { ... },
   insert: function (parent) { ... },
   template: function (value) { ... }
 };
 ```
-
