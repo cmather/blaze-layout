@@ -1,6 +1,6 @@
 {
   "name": "blaze-layout",
-  "description": "A Blaze powered layout component for dynamic rendering.",
+  "description": "Blaze powered layouts for iron-router",
   "homepage": "https://github.com/EventedMind/blaze-layout",
   "author": "Chris Mather (https://github.com/cmather)",
   "version": "0.0.1",
