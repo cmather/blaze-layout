@@ -58,15 +58,10 @@ layout.setRegion('footer', 'SomeFooterTemplate');
 ### Integration with IronRouter
 The IronRouter blaze-integration branch has been enhanced to allow a pluggable
 ui manager. This will allow users to use the old Shark ui manager, the
-blaze-layout manager, or even another one entirely. This package registers
-itself with IronRouter like this:
+blaze-layout manager, or even another one entirely. If you add this package to
+your project it will start working with IronRouter automatically.
 
-```javascript
-  Package['iron-router'].Router.configure({
-    uiManager: new BlazeUIManager
-  });
-```
-
+### API Notes
 The API contract between iron-router and any ui manager looks like this:
 
 ```javascript
