@@ -35,14 +35,18 @@ var getComponentData = function (comp) {
  *
  */
 var lookupTemplate = function (name) {
+  // self should be an instance of Layout
   var self = this;
   var comp;
   var result;
+  var contentBlocksByRegion = self.lookup('_contentBlocksByRegion') || {};
 
   if (!name)
     throw new Error("BlazeLayout: You must pass a name to lookupTemplate");
 
-  if ((comp = findComponentWithProp(name, self))) {
+  if (contentBlocksByRegion[name]) {
+    result = contentBlocksByRegion[name];
+  } else if ((comp = findComponentWithProp(name, self))) {
     result = comp[name];
   } else if (_.has(Template, name)) {
     result = Template[name];
@@ -77,6 +81,12 @@ Layout = UI.Component.extend({
     var dataDep = new Deps.Dependency;
     var regions = this._regions = new ReactiveDict;
     var content = this.__content;
+
+    // a place to put content defined like this:
+    // {{#contentFor region="footer"}}content{{/contentFor}}
+    // this will be searched in the lookup chain.
+    var contentBlocksByRegion = this._contentBlocksByRegion = {};
+
 
     // the default main region will be the content block
     // for this component. example:
@@ -137,6 +147,7 @@ Layout = UI.Component.extend({
       regions.set(key, null);
     };
 
+    // define a yield region to render templates into
     this.yield = UI.Component.extend({
       init: function () {
         var data = this.get();
@@ -162,6 +173,44 @@ Layout = UI.Component.extend({
             }));
           }
         };
+      }
+    });
+
+    // render content into a yield region using markup. when you call setRegion
+    // manually, you specify a string, not a content block. And the
+    // lookupTemplate method uses this string name to find the template. Since
+    // contentFor creates anonymous content we need a way to add this into the
+    // lookup chain. But then we need to destroy it if it's not used anymore.
+    // not sure how to do this.
+    this.contentFor = UI.Component.extend({
+      init: function () {
+        var data = this.get();
+        var region = this.region = data && data.region;
+
+        if (!region)
+          throw new Error("{{#contentFor}} requires a region argument like this: {{#contentFor region='footer'}}");
+      },
+
+      render: function () {
+        var self = this;
+        var region = self.region;
+        var contentBlocksByRegion = self.lookup('_contentBlocksByRegion');
+        var setRegion = self.lookup('setRegion');
+
+        if (contentBlocksByRegion[region]) {
+          //XXX do we need to do anyting special here like destroy()?
+          delete contentBlocksByRegion[region];
+        }
+
+        contentBlocksByRegion[region] = self.__content;
+
+        // this will just set the region to itself but when the lookupTemplate
+        // function searches it will check contentBlocksByRegion first, so we'll
+        // find the content block there.
+        setRegion(region, region);
+
+        // don't render anything for now. let the yield template control this.
+        return null;
       }
     });
 

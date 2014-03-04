@@ -47,3 +47,10 @@ footer {{title}}
     ok
   {{/Layout}}
 </template>
+
+<template name="ContentForTests">
+  main
+  {{#contentFor region="footer"}}
+    footer
+  {{/contentFor}}
+</template>

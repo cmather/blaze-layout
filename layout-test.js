@@ -112,6 +112,16 @@ Tinytest.add('layout - dynamic yield regions', function (test) {
   });
 });
 
+Tinytest.add('layout - contentFor helper', function (test) {
+  withRenderedLayout({template: 'LayoutWithTwoYields'}, function (layout, screen) {
+    layout.setRegion('ContentForTests');
+    Deps.flush();
+    test.equal(screen.text().compact(), 'mainfooter', 'contentFor helper should render into yield');
+  });
+});
+
+
+
 Tinytest.add('layout - global layout data context', function (test) {
   withRenderedLayout({template: 'LayoutWithData'}, function (layout, screen) {
     var layoutRenderCount = 1;
