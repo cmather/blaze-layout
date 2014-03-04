@@ -13,9 +13,6 @@ A Meteor Blaze powered Layout component for dynamic rendering and data. Its majo
   {{#Layout template="MyLayout"}}
     This content will go into the main yield region.
     
-    The contentFor helper hasn't been implemented quite 
-    yet so you can only set a region programmatically for now.
-    
     {{#contentFor region="footer"}}
       This is some footer content
     {{/contentFor}}
