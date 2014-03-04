@@ -166,3 +166,38 @@ Tinytest.add('layout - data with yield regions', function (test) {
     test.equal(screen.text().compact(), 'layout2child2footer2');
   });
 });
+
+Tinytest.add('layout - layout template not found in lookup', function (test) {
+  var div = new OnscreenDiv;
+
+  try {
+    var layout;
+
+    test.throws(function () {
+      layout = renderComponent(Layout, div.node(), {
+        template: 'SomeBogusTemplateThatDoesNotExist'
+      });
+    }, /BlazeLayout/); // this checks the error is a BlazeLayout error
+
+  } finally {
+    div.kill();
+  }
+});
+
+Tinytest.add('layout - region templates not found in lookup', function (test) {
+  var div = new OnscreenDiv;
+
+  try {
+    var layout = renderComponent(Layout, div.node());
+
+    test.throws(function () {
+      layout.setRegion('SomeBogusTemplate');
+      // _throwFirstError means it will actually throw
+      // instead of just logging to the console
+      Deps.flush({_throwFirstError: true});
+    }, /BlazeLayout/);
+
+  } finally {
+    div.kill();
+  }
+});
