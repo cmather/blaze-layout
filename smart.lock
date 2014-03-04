@@ -1,0 +1,15 @@
+{
+  "meteor": {},
+  "dependencies": {
+    "basePackages": {
+      "blaze-layout": {
+        "path": "."
+      }
+    },
+    "packages": {
+      "blaze-layout": {
+        "path": "."
+      }
+    }
+  }
+}

@@ -1,3 +1,67 @@
+/*****************************************************************************/
+/* Meteor Functions */
+/* 
+ * These are copied from Core because we need to throw an error at lookup time
+ * if a template is not found. The Component.lookup method does not give us a
+ * way to do that. We should construct a proper pull request and send to Meteor.
+ * Probably the ability to pass a not found callback or something to the lookup
+ * method as an option.
+/*****************************************************************************/
+var findComponentWithProp = function (id, comp) {
+  while (comp) {
+    if (typeof comp[id] !== 'undefined')
+      return comp;
+    comp = comp.parent;
+  }
+  return null;
+};
+
+var getComponentData = function (comp) {
+  comp = findComponentWithProp('data', comp);
+  return (comp ?
+          (typeof comp.data === 'function' ?
+           comp.data() : comp.data) :
+          null);
+};
+/*****************************************************************************/
+/* End Meteor Functions */
+/*****************************************************************************/
+
+/**
+ * Find a template object.
+ *
+ * Similar to Component.lookupTemplate but allows us to throw an error if we
+ * can't find the template. This is useful in debugging vs. silently failing.
+ *
+ */
+var lookupTemplate = function (name) {
+  var self = this;
+  var comp;
+  var result;
+
+  if (!name)
+    throw new Error("BlazeLayout: You must pass a name to lookupTemplate");
+
+  if ((comp = findComponentWithProp(name, self))) {
+    result = comp[name];
+  } else if (_.has(Template, name)) {
+    result = Template[name];
+  } else if (Handlebars._globalHelpers[name]) {
+    result = Handlebars._globalHelpers[name];
+  }
+
+  if (typeof result === 'function' && !result._isEmboxedConstant) {
+    return function (/* args */ ) {
+      var data = getComponentData(self);
+      return result.apply(data, arguments);
+    }
+  } else if (result) {
+    return result
+  } else {
+    throw new Error("BlazeLayout: Sorry, couldn't find a template named " + name + ". Are you sure you defined it?");
+  }
+}
+
 Layout = UI.Component.extend({
   init: function () {
     //XXX we shouldn't have to define all of these methods inside the init
@@ -94,7 +158,7 @@ Layout = UI.Component.extend({
             return UI.With(function () {
               return layout.data();
             }, UI.block(function () {
-              return Spacebars.include(self.lookupTemplate(tmpl));
+              return lookupTemplate.call(self, tmpl);
             }));
           }
         };
@@ -128,7 +192,7 @@ Layout = UI.Component.extend({
     // the layout is re-endered.
     return function () {
       var tmplName = self.template();
-      return self.lookupTemplate(tmplName);
+      return lookupTemplate.call(self, tmplName);
     };
   }
 });
