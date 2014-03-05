@@ -109,17 +109,13 @@ Layout = UI.Component.extend({
       }
     };
 
-    var emboxedData = UI.emboxValue(function () {
-      dataDep.depend();
-      return data;
-    });
-
     this.data = function (value) {
       if (typeof value !== 'undefined' && !EJSON.equals(value, data)) {
         data = value;
         dataDep.changed();
       } else {
-        return emboxedData();
+        dataDep.depend();
+        return data;
       }
     };
 
