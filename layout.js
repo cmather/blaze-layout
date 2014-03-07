@@ -30,16 +30,21 @@ var getComponentData = function (comp) {
 /**
  * Find a template object.
  *
- * Similar to Component.lookupTemplate but allows us to throw an error if we
- * can't find the template. This is useful in debugging vs. silently failing.
+ * Similar to Component.lookupTemplate with two differences:
  *
+ * 1. Throw an error if we can't find the template. This is useful in debugging
+ * vs. silently failing.
+ *
+ * 2. If the template is a property on the component, don't call
+ * getComponentData(self), thereby creating an unnecessary data dependency. This
+ * was initially causing problems with {{> yield}}
  */
 var lookupTemplate = function (name) {
   // self should be an instance of Layout
   var self = this;
   var comp;
   var result;
-  var contentBlocksByRegion = self.lookup('_contentBlocksByRegion') || {};
+  var contentBlocksByRegion = self.get('_contentBlocksByRegion');
 
   if (!name)
     throw new Error("BlazeLayout: You must pass a name to lookupTemplate");
@@ -56,8 +61,9 @@ var lookupTemplate = function (name) {
 
   if (typeof result === 'function' && !result._isEmboxedConstant) {
     return function (/* args */ ) {
-      var data = getComponentData(self);
-      return result.apply(data, arguments);
+      // modified from Core to call function in context of the
+      // component, not a data context.
+      return result.apply(self, arguments);
     }
   } else if (result) {
     return result
@@ -68,16 +74,18 @@ var lookupTemplate = function (name) {
 
 Layout = UI.Component.extend({
   init: function () {
-    //XXX we shouldn't have to define all of these methods inside the init
-    //    function. Meteor should implement proper OO so we can just add these
-    //    methods to the prototype of Layout like regular JavaScript OO. In the
-    //    current paradigm, no one can inherit from Layout and override these
-    //    methods. They're effectively all private until instance time.
+    var self = this;
 
     var layout = this;
-    var tmpl = this.get('template');
+
+    var tmpl = Deps.nonreactive(function () {
+      return self.get('template');
+    });
+
     var tmplDep = new Deps.Dependency;
-    var data = this.get();
+
+    // get the initial data value
+    var data = Deps.nonreactive(function () { return self.get(); });
     var dataDep = new Deps.Dependency;
     var regions = this._regions = new ReactiveDict;
     var content = this.__content;
@@ -150,27 +158,37 @@ Layout = UI.Component.extend({
     // define a yield region to render templates into
     this.yield = UI.Component.extend({
       init: function () {
-        var data = this.get();
-        this.region = data && data.region || 'main';
+        var self = this;
+
+        var data = Deps.nonreactive(function () { return self.get(); });
+        var region = self.region = (data && data.region) || 'main';
+
+        // reset the data function to use the layout's
+        // data
+        this.data = function () {
+          return layout.data();
+        };
       },
 
       render: function () {
         var self = this;
         var region = self.region;
-        var regions = self.lookup('_regions');
 
         // returning a function tells UI.materialize to
         // create a computation. then, if the region template
         // changes, this comp will be rerun and the new template
         // will get put on the screen.
         return function () {
+          var regions = Deps.nonreactive(function () {
+            return self.get('_regions');
+          });
+
+          // create a reactive dep
           var tmpl = regions.get(region);
+
+          // don't call lookup if tmpl is undefined
           if (tmpl) {
-            return UI.With(function () {
-              return layout.data();
-            }, UI.block(function () {
-              return lookupTemplate.call(self, tmpl);
-            }));
+            return lookupTemplate.call(self, tmpl);
           }
         };
       }
@@ -184,8 +202,9 @@ Layout = UI.Component.extend({
     // not sure how to do this.
     this.contentFor = UI.Component.extend({
       init: function () {
-        var data = this.get();
-        var region = this.region = data && data.region;
+        var self = this;
+        var data = Deps.nonreactive(function () { return self.get(); });
+        var region = self.region = data.region;
 
         if (!region)
           throw new Error("{{#contentFor}} requires a region argument like this: {{#contentFor region='footer'}}");
@@ -194,20 +213,21 @@ Layout = UI.Component.extend({
       render: function () {
         var self = this;
         var region = self.region;
-        var contentBlocksByRegion = self.lookup('_contentBlocksByRegion');
-        var setRegion = self.lookup('setRegion');
+
+        var contentBlocksByRegion = layout._contentBlocksByRegion;
 
         if (contentBlocksByRegion[region]) {
-          //XXX do we need to do anyting special here like destroy()?
           delete contentBlocksByRegion[region];
         }
 
+        // store away the content block so we can find it during lookup
+        // which happens in the yield function.
         contentBlocksByRegion[region] = self.__content;
 
         // this will just set the region to itself but when the lookupTemplate
         // function searches it will check contentBlocksByRegion first, so we'll
         // find the content block there.
-        setRegion(region, region);
+        layout.setRegion(region, region);
 
         // don't render anything for now. let the yield template control this.
         return null;
@@ -228,20 +248,26 @@ Layout = UI.Component.extend({
 
     this._defaultLayout = function () {
       return UI.block(function () {
-        return Spacebars.include(this.lookupTemplate('yield'));
+        var block = this;
+        return Spacebars.include(block.lookupTemplate('yield'));
       });
     };
   },
 
   render: function () {
     var self = this;
-
     // return a function to create a reactive
     // computation. so if the template changes
     // the layout is re-endered.
     return function () {
+      // reactive
       var tmplName = self.template();
-      return lookupTemplate.call(self, tmplName);
+
+      var tmpl = Deps.nonreactive(function () {
+        return lookupTemplate.call(self, tmplName);
+      });
+
+      return tmpl;
     };
   }
 });

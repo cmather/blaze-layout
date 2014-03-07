@@ -120,8 +120,6 @@ Tinytest.add('layout - contentFor helper', function (test) {
   });
 });
 
-
-
 Tinytest.add('layout - global layout data context', function (test) {
   withRenderedLayout({template: 'LayoutWithData'}, function (layout, screen) {
     var layoutRenderCount = 1;

@@ -3,6 +3,6 @@
   "description": "Blaze powered layouts for iron-router",
   "homepage": "https://github.com/EventedMind/blaze-layout",
   "author": "Chris Mather (https://github.com/cmather)",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "git": "https://github.com/EventedMind/blaze-layout.git"
 }
