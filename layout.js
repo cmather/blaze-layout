@@ -1,4 +1,9 @@
+var isLogging = false;
+
 var log = function (msg) {
+  if (!isLogging)
+    return;
+
   if (arguments.length > 1)
     msg = _.toArray(arguments).join(' ');
   console.log('%c<BlazeLayout> ' + msg, 'color: green; font-weight: bold; font-size: 1.3em;');
@@ -123,14 +128,19 @@ Layout = UI.Component.extend({
       }
     };
 
+    var emboxedData = UI.emboxValue(function () {
+      log('return data()');
+      dataDep.depend();
+      return data;
+    });
+
     this.data = function (value) {
       if (typeof value !== 'undefined' && !EJSON.equals(value, data)) {
+        log('set data(' + EJSON.stringify(value) + ')');
         data = value;
-        log('about to invalidate global data context');
         dataDep.changed();
-      } else {
-        dataDep.depend();
-        return data;
+      } else if (typeof value === 'undefined') {
+        return emboxedData();
       }
     };
 
