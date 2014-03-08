@@ -1,4 +1,4 @@
-var isLogging = false;
+var isLogging = true;
 
 var log = function (msg) {
   if (!isLogging)
@@ -90,7 +90,7 @@ Layout = UI.Component.extend({
     var layout = this;
 
     var tmpl = Deps.nonreactive(function () {
-      return self.get('template');
+      return self.get('template') || '_defaultLayout';
     });
 
     var tmplDep = new Deps.Dependency;
@@ -118,30 +118,62 @@ Layout = UI.Component.extend({
     * instance methods
     */
 
+   //XXX there are multiple paths to get to _defaultLayout so
+    //we need to fix this so that null/false value gets converted
+    //to _defaultLayout and that's the initial value of tmpl.
     this.template = function (value) {
-      if (typeof value !== 'undefined' && value != tmpl) {
-        tmpl = value;
-        tmplDep.changed();
+      if (typeof value !== 'undefined') {
+
+        // make sure we convert false and null
+        // values to the _defaultLayout so when
+        // we compare to our existing template
+        // we don't re-render the default layout
+        // unnecessarily.
+        if (value === false || value === null)
+          value = '_defaultLayout';
+        
+        if (!EJSON.equals(value, tmpl)) {
+          tmpl = value;
+          tmplDep.changed();
+        }
       } else {
         tmplDep.depend();
         return tmpl || '_defaultLayout';
       }
     };
 
+    /*
     var emboxedData = UI.emboxValue(function () {
       log('return data()');
       dataDep.depend();
       return data;
     });
+    */
 
+   /*
     this.data = function (value) {
       if (typeof value !== 'undefined' && !EJSON.equals(value, data)) {
         log('set data(' + EJSON.stringify(value) + ')');
         data = value;
         dataDep.changed();
       } else if (typeof value === 'undefined') {
-        return emboxedData();
+        log('get data()');
+        dataDep.depend();
+        return data;
       }
+    };
+    */
+    this.setData = function (value) {
+      log('setData', value);
+      if (!EJSON.equals(value, data)) {
+        data = value;
+        dataDep.changed();
+      }
+    };
+
+    this.getData = function () {
+      dataDep.depend();
+      return data;
     };
 
     /**
@@ -183,7 +215,7 @@ Layout = UI.Component.extend({
         // reset the data function to use the layout's
         // data
         this.data = function () {
-          return layout.data();
+          return layout.getData();
         };
       },
 
@@ -272,21 +304,28 @@ Layout = UI.Component.extend({
 
   render: function () {
     var self = this;
-    // return a function to create a reactive
-    // computation. so if the template changes
-    // the layout is re-endered.
-    return function () {
-      // reactive
-      var tmplName = self.template();
 
-      var tmpl = Deps.nonreactive(function () {
-        return lookupTemplate.call(self, tmplName);
-      });
+    return UI.Component.extend({
+      data: function () {
+        return self.getData();
+      },
+      render: function () {
+        // return a function to create a reactive
+        // computation. so if the template changes
+        // the layout is re-endered.
+        return function () {
+          // reactive
+          var tmplName = self.template();
 
-      log(EJSON.stringify(Deps.currentComputation));
-      log('rendering layout: ' + tmplName);
-      return tmpl;
-    };
+          var tmpl = Deps.nonreactive(function () {
+            return lookupTemplate.call(self, tmplName);
+          });
+
+          log('rendering layout: ' + tmplName);
+          return tmpl;
+        };
+      }
+    });
   }
 });
 
@@ -304,7 +343,7 @@ BlazeUIManager = function (router) {
   this.router = router;
   this._component = null;
 
-  _.each(['setRegion', 'clearRegion', 'getRegionKeys', 'data'], function (method) {
+  _.each(['setRegion', 'clearRegion', 'getRegionKeys', 'getData', 'setData'], function (method) {
     self[method] = function () {
       if (self._component) {
         return self._component[method].apply(this, arguments);
