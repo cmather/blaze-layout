@@ -1,3 +1,9 @@
+var log = function (msg) {
+  if (arguments.length > 1)
+    msg = _.toArray(arguments).join(' ');
+  console.log('%c<BlazeLayout> ' + msg, 'color: green; font-weight: bold; font-size: 1.3em;');
+};
+
 /*****************************************************************************/
 /* Meteor Functions */
 /* 
@@ -120,6 +126,7 @@ Layout = UI.Component.extend({
     this.data = function (value) {
       if (typeof value !== 'undefined' && !EJSON.equals(value, data)) {
         data = value;
+        log('about to invalidate global data context');
         dataDep.changed();
       } else {
         dataDep.depend();
@@ -248,8 +255,7 @@ Layout = UI.Component.extend({
 
     this._defaultLayout = function () {
       return UI.block(function () {
-        var block = this;
-        return Spacebars.include(block.lookupTemplate('yield'));
+        return lookupTemplate.call(layout, 'yield');
       });
     };
   },
@@ -267,6 +273,8 @@ Layout = UI.Component.extend({
         return lookupTemplate.call(self, tmplName);
       });
 
+      log(EJSON.stringify(Deps.currentComputation));
+      log('rendering layout: ' + tmplName);
       return tmpl;
     };
   }
