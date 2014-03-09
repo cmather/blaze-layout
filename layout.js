@@ -1,4 +1,4 @@
-var isLogging = true;
+var isLogging = false;
 
 var log = function (msg) {
   if (!isLogging)
