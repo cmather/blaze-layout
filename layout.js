@@ -118,9 +118,6 @@ Layout = UI.Component.extend({
     * instance methods
     */
 
-   //XXX there are multiple paths to get to _defaultLayout so
-    //we need to fix this so that null/false value gets converted
-    //to _defaultLayout and that's the initial value of tmpl.
     this.template = function (value) {
       if (typeof value !== 'undefined') {
 
@@ -142,27 +139,12 @@ Layout = UI.Component.extend({
       }
     };
 
-    /*
     var emboxedData = UI.emboxValue(function () {
       log('return data()');
       dataDep.depend();
       return data;
     });
-    */
 
-   /*
-    this.data = function (value) {
-      if (typeof value !== 'undefined' && !EJSON.equals(value, data)) {
-        log('set data(' + EJSON.stringify(value) + ')');
-        data = value;
-        dataDep.changed();
-      } else if (typeof value === 'undefined') {
-        log('get data()');
-        dataDep.depend();
-        return data;
-      }
-    };
-    */
     this.setData = function (value) {
       log('setData', value);
       if (!EJSON.equals(value, data)) {
@@ -172,8 +154,11 @@ Layout = UI.Component.extend({
     };
 
     this.getData = function () {
-      dataDep.depend();
-      return data;
+      return emboxedData();
+    };
+
+    this.data = function () {
+      return self.getData();
     };
 
     /**
@@ -304,28 +289,20 @@ Layout = UI.Component.extend({
 
   render: function () {
     var self = this;
+    // return a function to create a reactive
+    // computation. so if the template changes
+    // the layout is re-endered.
+    return function () {
+      // reactive
+      var tmplName = self.template();
 
-    return UI.Component.extend({
-      data: function () {
-        return self.getData();
-      },
-      render: function () {
-        // return a function to create a reactive
-        // computation. so if the template changes
-        // the layout is re-endered.
-        return function () {
-          // reactive
-          var tmplName = self.template();
+      var tmpl = Deps.nonreactive(function () {
+        return lookupTemplate.call(self, tmplName);
+      });
 
-          var tmpl = Deps.nonreactive(function () {
-            return lookupTemplate.call(self, tmplName);
-          });
-
-          log('rendering layout: ' + tmplName);
-          return tmpl;
-        };
-      }
-    });
+      log('rendering layout: ' + tmplName);
+      return tmpl;
+    };
   }
 });
 
@@ -343,7 +320,13 @@ BlazeUIManager = function (router) {
   this.router = router;
   this._component = null;
 
-  _.each(['setRegion', 'clearRegion', 'getRegionKeys', 'getData', 'setData'], function (method) {
+  _.each([
+    'setRegion',
+    'clearRegion',
+    'getRegionKeys',
+    'getData',
+    'setData'
+  ], function (method) {
     self[method] = function () {
       if (self._component) {
         return self._component[method].apply(this, arguments);
@@ -356,6 +339,8 @@ BlazeUIManager = function (router) {
   self.layout = function () {
     if (self._component)
       return self._component.template.apply(this, arguments);
+    else
+      throw new Error('Layout has not been rendered yet');
   };
 };
 
