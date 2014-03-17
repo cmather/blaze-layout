@@ -345,13 +345,13 @@ BlazeUIManager = function (router) {
 };
 
 BlazeUIManager.prototype = {
-  render: function (props) {
-    this._component = UI.render(Layout.extend(props || {}));
+  render: function (props, parentComponent) {
+    this._component = UI.render(Layout.extend(props || {}), parentComponent || UI.body);
     return this._component;
   },
 
-  insert: function (parent) {
-    UI.DomRange.insert(this.render().dom, parent || document.body);
+  insert: function (parentDom, parentComponent, props) {
+    UI.DomRange.insert(this.render(props, parentComponent).dom, parentDom || document.body);
   }
 };
 
