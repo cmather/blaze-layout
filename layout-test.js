@@ -18,13 +18,14 @@ var withRenderedComponent = function (cmp, props, cb) {
     props = {};
   }
 
-  var screen = new OnscreenDiv;
-  var inst = renderComponent(cmp, screen.node(), props);
+  var screen = document.createElement('div');
+  document.body.appendChild(screen);
+  var inst = renderComponent(cmp, screen, props);
 
   try {
     cb(inst, screen);
   } finally {
-    screen.kill();
+    document.body.removeChild(screen);
   }
 };
 
@@ -34,23 +35,24 @@ var withRenderedLayout = function (props, cb) {
     props = {};
   }
 
-  var screen = new OnscreenDiv;
-  var inst = renderLayout(screen.node(), props);
+  var screen = document.createElement('div');
+  document.body.appendChild(screen);
+  var inst = renderLayout(screen, props);
 
   try {
     cb(inst, screen);
   } finally {
-    screen.kill();
+    document.body.removeChild(screen);
   }
 };
 
 Tinytest.add('layout - rendering dynamic templates', function (test) {
   withRenderedLayout({template: 'LayoutOne'}, function (layout, screen) {
-    test.equal(screen.html().trim(), 'one', 'initial layout template not rendered');
+    test.equal(screen.innerHTML.trim(), 'one', 'initial layout template not rendered');
 
     layout.template('LayoutTwo');
     Deps.flush();
-    test.equal(screen.html().trim(), 'two', 'calling template method should change layout template');
+    test.equal(screen.innerHTML.trim(), 'two', 'calling template method should change layout template');
   });
 });
 
@@ -63,11 +65,11 @@ Tinytest.add('layout - dynamic data', function (test) {
     };
 
     test.equal(renderCount, 1, 'layout should have only rendered once');
-    test.equal(screen.html().trim(), 'layout', 'initial layout not rendered');
+    test.equal(screen.innerHTML.trim(), 'layout', 'initial layout not rendered');
 
     layout.data({title: 'test'});
     Deps.flush();
-    test.equal(screen.html().trim(), 'layout test', 'layout data context not changed');
+    test.equal(screen.innerHTML.trim(), 'layout test', 'layout data context not changed');
 
     test.equal(renderCount, 1, 'layout should have only rendered once');
   });
@@ -77,13 +79,13 @@ Tinytest.add('layout - yield into main region with default layout', function (te
   withRenderedLayout(function (layout, screen) {
     layout.setRegion('One'); 
     Deps.flush();
-    test.equal(screen.html().trim(), 'one', 'could not render into main region with default layout');
+    test.equal(screen.innerHTML.trim(), 'one', 'could not render into main region with default layout');
   });
 });
 
 Tinytest.add('layout - default main region using Layout template', function (test) {
   withRenderedComponent(Template.DefaultMainRegion, function (cmp, screen) {
-    test.equal(screen.html().trim(), 'ok', 'default main region should be __content');
+    test.equal(screen.innerHTML.trim(), 'ok', 'default main region should be __content');
   });
 });
 
@@ -124,16 +126,16 @@ Tinytest.add('layout - global layout data context', function (test) {
   withRenderedLayout({template: 'LayoutWithData'}, function (layout, screen) {
     var layoutRenderCount = 1;
     layout.rendered = function () { layoutRenderCount++; };
-    test.equal(screen.html().compact(), 'layout');
+    test.equal(screen.innerHTML.compact(), 'layout');
 
     layout.data({title:'1'});
     Deps.flush();
-    test.equal(screen.html().compact(), 'layout1', 'data context should be set on layout');
+    test.equal(screen.innerHTML.compact(), 'layout1', 'data context should be set on layout');
     test.equal(layoutRenderCount, 1, 'layout should not re-render');
 
     layout.data({title:'2'});
     Deps.flush();
-    test.equal(screen.html().compact(), 'layout2', 'data context should be set on layout');
+    test.equal(screen.innerHTML.compact(), 'layout2', 'data context should be set on layout');
     test.equal(layoutRenderCount, 1, 'layout should not re-render');
   });
 });
@@ -176,27 +178,29 @@ Tinytest.add('layout - data with yield regions', function (test) {
 });
 
 Tinytest.add('layout - layout template not found in lookup', function (test) {
-  var div = new OnscreenDiv;
+  var div = document.createElement('div');
+  document.body.appendChild(div);
 
   try {
     var layout;
 
     test.throws(function () {
-      layout = renderComponent(Layout, div.node(), {
+      layout = renderComponent(Layout, div, {
         template: 'SomeBogusTemplateThatDoesNotExist'
       });
     }, /BlazeLayout/); // this checks the error is a BlazeLayout error
 
   } finally {
-    div.kill();
+    document.body.removeChild(div);
   }
 });
 
 Tinytest.add('layout - region templates not found in lookup', function (test) {
-  var div = new OnscreenDiv;
+  var div = document.createElement('div');
+  document.body.appendChild(div);
 
   try {
-    var layout = renderComponent(Layout, div.node());
+    var layout = renderComponent(Layout, div);
 
     test.throws(function () {
       layout.setRegion('SomeBogusTemplate');
@@ -206,6 +210,6 @@ Tinytest.add('layout - region templates not found in lookup', function (test) {
     }, /BlazeLayout/);
 
   } finally {
-    div.kill();
+    document.body.removeChild(div);
   }
 });
