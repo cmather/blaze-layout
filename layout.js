@@ -1,3 +1,11 @@
+//XXX Infinite loop issue in this circumstance:
+// {{#Layout template="MyLayout"}}
+//  {{> yield}}
+// {{/Layout}}
+// 
+// because content does a yield lookup for the main region, which in turn
+// yields, which results in a stack overflow.
+
 var isLogging = false;
 
 var log = function (msg) {
@@ -66,9 +74,7 @@ var lookupTemplate = function (name) {
     result = comp[name];
   } else if (_.has(Template, name)) {
     result = Template[name];
-  } else if (Handlebars._globalHelpers[name]) {
-    result = Handlebars._globalHelpers[name];
-  }
+  } else if (result = UI._globalHelper(name)) {}
 
   if (typeof result === 'function' && !result._isEmboxedConstant) {
     return function (/* args */ ) {
@@ -84,6 +90,10 @@ var lookupTemplate = function (name) {
 }
 
 Layout = UI.Component.extend({
+  kind: 'Layout',
+
+  __helperHost: true,
+
   init: function () {
     var self = this;
 
@@ -106,14 +116,6 @@ Layout = UI.Component.extend({
     // this will be searched in the lookup chain.
     var contentBlocksByRegion = this._contentBlocksByRegion = {};
 
-
-    // the default main region will be the content block
-    // for this component. example:
-    //  {{#Layout template="MyLayout"}}
-    //    Content block in here becomes main region
-    //  {{/Layout}}
-    regions.set('main', '_defaultMainRegion');
-
     /**
     * instance methods
     */
@@ -126,6 +128,9 @@ Layout = UI.Component.extend({
         // we compare to our existing template
         // we don't re-render the default layout
         // unnecessarily.
+        // XXX this is a problem becuase this _defaultLayout
+        // will never get found becuase it's a helper on the layout
+        // instance
         if (value === false || value === null)
           value = '_defaultLayout';
         
@@ -135,7 +140,9 @@ Layout = UI.Component.extend({
         }
       } else {
         tmplDep.depend();
-        return tmpl || '_defaultLayout';
+        //XXX changed to just return tmpl instead
+        //of a _defaultLayout
+        return tmpl;
       }
     };
 
@@ -213,17 +220,17 @@ Layout = UI.Component.extend({
         // changes, this comp will be rerun and the new template
         // will get put on the screen.
         return function () {
-          var regions = Deps.nonreactive(function () {
-            return layout._regions;
-          });
-
+          var regions = layout._regions;
           // create a reactive dep
           var tmpl = regions.get(region);
 
-          // don't call lookup if tmpl is undefined
-          if (tmpl) {
-            return lookupTemplate.call(self, tmpl);
+          if (tmpl)
+            return lookupTemplate.call(layout, tmpl);
+          else if (region === 'main' && content) {
+            return content;
           }
+          else
+            return null;
         };
       }
     });
@@ -268,18 +275,6 @@ Layout = UI.Component.extend({
       }
     });
 
-    /**
-     * By default the main region will be the content block
-     * if the layout was used directly in your template like this:
-     *
-     *  {{#Layout}}
-     *    content block goes into main {{> yield}}
-     *  {{/Layout}}
-     */
-    this._defaultMainRegion = function () {
-      return content || null;
-    };
-
     this._defaultLayout = function () {
       return UI.block(function () {
         return lookupTemplate.call(layout, 'yield');
@@ -296,12 +291,16 @@ Layout = UI.Component.extend({
       // reactive
       var tmplName = self.template();
 
-      var tmpl = Deps.nonreactive(function () {
+      //XXX hack to make work with null/false values.
+      //see this.template = in ctor function.
+      if (tmplName === '_defaultLayout')
+        return self._defaultLayout;
+      else if (tmplName) {
         return lookupTemplate.call(self, tmplName);
-      });
-
-      log('rendering layout: ' + tmplName);
-      return tmpl;
+      }
+      else {
+        return self['yield'];
+      }
     };
   }
 });
@@ -338,7 +337,7 @@ BlazeUIManager = function (router) {
   // "template" method.
   self.layout = function () {
     if (self._component)
-      return self._component.template.apply(this, arguments);
+      return self._component.template.apply(self, arguments);
     else
       throw new Error('Layout has not been rendered yet');
   };
@@ -355,12 +354,26 @@ BlazeUIManager.prototype = {
   }
 };
 
+var findComponentOfKind = function (kind, comp) {
+  while (comp) {
+    if (comp.kind === kind)
+      return comp;
+    comp = comp.parent;
+  }
+  return null;
+};
+
 // Override {{> yield}} and {{#contentFor}} to find the closest
 // enclosing layout
 var origLookup = UI.Component.lookup;
-UI.Component.lookup = function (id) {
+UI.Component.lookup = function (id, opts) {
   if (id === 'yield' || id === 'contentFor') {
-    return findComponentWithProp(id)[id];
+    var layout = findComponentOfKind('Layout', this);
+    if (!layout)
+      throw new Error("Couldn't find a Layout component in the rendered component tree");
+    else {
+      return layout[id];
+    }
   } else {
     return origLookup.apply(this, arguments);
   }

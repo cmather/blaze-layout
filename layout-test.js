@@ -67,7 +67,7 @@ Tinytest.add('layout - dynamic data', function (test) {
     test.equal(renderCount, 1, 'layout should have only rendered once');
     test.equal(screen.innerHTML.trim(), 'layout', 'initial layout not rendered');
 
-    layout.data({title: 'test'});
+    layout.setData({title: 'test'});
     Deps.flush();
     test.equal(screen.innerHTML.trim(), 'layout test', 'layout data context not changed');
 
@@ -99,18 +99,18 @@ Tinytest.add('layout - dynamic yield regions', function (test) {
 
     layout.setRegion('One');
     Deps.flush();
-    test.equal(screen.text().compact(), 'one', 'main region should be "one"');
+    test.equal(screen.innerHTML.compact(), 'one', 'main region should be "one"');
     test.equal(oneRenderCount, 1, 'template should have been rendered into layout');
 
     // should be equivalent to above
     layout.setRegion('main', 'One');
     Deps.flush();
-    test.equal(screen.text().compact(), 'one', 'main region should be "one"');
+    test.equal(screen.innerHTML.compact(), 'one', 'main region should be "one"');
     test.equal(oneRenderCount, 1, 'template already rendered so should not be rendered again');
 
     layout.setRegion('footer', 'Two');
     Deps.flush();
-    test.equal(screen.text().compact(), 'onetwo', 'both yield regions should have rendered');
+    test.equal(screen.innerHTML.compact(), 'onetwo', 'both yield regions should have rendered');
   });
 });
 
@@ -118,7 +118,7 @@ Tinytest.add('layout - contentFor helper', function (test) {
   withRenderedLayout({template: 'LayoutWithTwoYields'}, function (layout, screen) {
     layout.setRegion('ContentForTests');
     Deps.flush();
-    test.equal(screen.text().compact(), 'mainfooter', 'contentFor helper should render into yield');
+    test.equal(screen.innerHTML.compact(), 'mainfooter', 'contentFor helper should render into yield');
   });
 });
 
@@ -128,12 +128,12 @@ Tinytest.add('layout - global layout data context', function (test) {
     layout.rendered = function () { layoutRenderCount++; };
     test.equal(screen.innerHTML.compact(), 'layout');
 
-    layout.data({title:'1'});
+    layout.setData({title:'1'});
     Deps.flush();
     test.equal(screen.innerHTML.compact(), 'layout1', 'data context should be set on layout');
     test.equal(layoutRenderCount, 1, 'layout should not re-render');
 
-    layout.data({title:'2'});
+    layout.setData({title:'2'});
     Deps.flush();
     test.equal(screen.innerHTML.compact(), 'layout2', 'data context should be set on layout');
     test.equal(layoutRenderCount, 1, 'layout should not re-render');
@@ -157,23 +157,23 @@ Tinytest.add('layout - data with yield regions', function (test) {
     test.equal(childRenderCount, 1);
     test.equal(footerRenderCount, 1);
     test.equal(layoutRenderCount, 1);
-    test.equal(screen.text().compact(), 'layoutchildfooter');
+    test.equal(screen.innerHTML.compact(), 'layoutchildfooter');
 
-    layout.data({title:'1'});
+    layout.setData({title:'1'});
     Deps.flush();
 
     test.equal(childRenderCount, 1);
     test.equal(footerRenderCount, 1);
     test.equal(layoutRenderCount, 1);
-    test.equal(screen.text().compact(), 'layout1child1footer1');
+    test.equal(screen.innerHTML.compact(), 'layout1child1footer1');
 
-    layout.data({title:'2'});
+    layout.setData({title:'2'});
     Deps.flush();
 
     test.equal(childRenderCount, 1);
     test.equal(footerRenderCount, 1);
     test.equal(layoutRenderCount, 1);
-    test.equal(screen.text().compact(), 'layout2child2footer2');
+    test.equal(screen.innerHTML.compact(), 'layout2child2footer2');
   });
 });
 
