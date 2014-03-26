@@ -55,7 +55,7 @@ var lookupTemplate = function (name) {
   var self = this;
   var comp;
   var result;
-  var contentBlocksByRegion = self.get('_contentBlocksByRegion');
+  var contentBlocksByRegion = self._contentBlocksByRegion;
 
   if (!name)
     throw new Error("BlazeLayout: You must pass a name to lookupTemplate");
@@ -90,7 +90,7 @@ Layout = UI.Component.extend({
     var layout = this;
 
     var tmpl = Deps.nonreactive(function () {
-      return self.get('template') || '_defaultLayout';
+      return self.get('template') || self.template || '_defaultLayout';
     });
 
     var tmplDep = new Deps.Dependency;
@@ -214,7 +214,7 @@ Layout = UI.Component.extend({
         // will get put on the screen.
         return function () {
           var regions = Deps.nonreactive(function () {
-            return self.get('_regions');
+            return layout._regions;
           });
 
           // create a reactive dep
@@ -352,6 +352,17 @@ BlazeUIManager.prototype = {
 
   insert: function (parentDom, parentComponent, props) {
     UI.DomRange.insert(this.render(props, parentComponent).dom, parentDom || document.body);
+  }
+};
+
+// Override {{> yield}} and {{#contentFor}} to find the closest
+// enclosing layout
+var origLookup = UI.Component.lookup;
+UI.Component.lookup = function (id) {
+  if (id === 'yield' || id === 'contentFor') {
+    return findComponentWithProp(id)[id];
+  } else {
+    return origLookup.apply(this, arguments);
   }
 };
 
