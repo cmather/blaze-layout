@@ -202,7 +202,16 @@ Layout = UI.Component.extend({
         var self = this;
 
         var data = Deps.nonreactive(function () { return self.get(); });
-        var region = self.region = (data && data.region) || 'main';
+        var region;
+
+        if (_.isString(data))
+          region = data;
+        else if (_.isObject(data))
+          region = data.region;
+        else
+          region = 'main';
+
+        self.region = region;
 
         // reset the data function to use the layout's
         // data
@@ -245,7 +254,15 @@ Layout = UI.Component.extend({
       init: function () {
         var self = this;
         var data = Deps.nonreactive(function () { return self.get(); });
-        var region = self.region = data.region;
+
+        var region;
+
+        if (_.isString(data))
+          region = data;
+        else if (_.isObject(data))
+          region = data.region;
+
+        self.region = region;
 
         if (!region)
           throw new Error("{{#contentFor}} requires a region argument like this: {{#contentFor region='footer'}}");
@@ -367,7 +384,9 @@ var findComponentOfKind = function (kind, comp) {
 // enclosing layout
 var origLookup = UI.Component.lookup;
 UI.Component.lookup = function (id, opts) {
-  if (id === 'yield' || id === 'contentFor') {
+  if (id === 'yield') {
+    throw new Error("Sorry, would you mind using {{> yield}} instead of {{yield}}? It helps the Blaze engine.");
+  } else if (id === 'contentFor') {
     var layout = findComponentOfKind('Layout', this);
     if (!layout)
       throw new Error("Couldn't find a Layout component in the rendered component tree");
@@ -378,6 +397,23 @@ UI.Component.lookup = function (id, opts) {
     return origLookup.apply(this, arguments);
   }
 };
+
+var origLookupTemplate = UI.Component.lookupTemplate;
+UI.Component.lookupTemplate = function (id, opts) {
+  if (id === 'yield') {
+    var layout = findComponentOfKind('Layout', this);
+    if (!layout)
+      throw new Error("Couldn't find a Layout component in the rendered component tree");
+    else {
+      return layout[id];
+    }
+  } else {
+    return origLookupTemplate.apply(this, arguments);
+  }
+};
+
+UI.registerHelper('yield', function () {
+});
 
 if (Package['iron-router']) {
   Package['iron-router'].Router.configure({
