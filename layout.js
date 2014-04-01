@@ -412,9 +412,6 @@ UI.Component.lookupTemplate = function (id, opts) {
   }
 };
 
-UI.registerHelper('yield', function () {
-});
-
 if (Package['iron-router']) {
   Package['iron-router'].Router.configure({
     uiManager: new BlazeUIManager
