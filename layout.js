@@ -311,7 +311,11 @@ Layout = UI.Component.extend({
       if (tmplName === '_defaultLayout')
         return self._defaultLayout;
       else if (tmplName) {
-        return lookupTemplate.call(self, tmplName);
+        var tmpl = lookupTemplate.call(self, tmplName);
+        // it's a component
+        if (typeof tmpl.instantiate === 'function')
+          tmpl.__helperHost = false;
+        return tmpl;
       }
       else {
         return self['yield'];

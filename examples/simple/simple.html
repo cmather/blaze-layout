@@ -8,6 +8,7 @@
 
 <template name="layout">
   <div class="layout">
+    {{layoutHelper}}
     {{> yield}}
   </div>
 </template>
@@ -15,7 +16,7 @@
 <template name="hello">
   {{#Layout template='layout'}}
     <h1>Hello World!</h1>
-    {{greeting}}
+    {{helloHelper}}
     <input type="button" value="Click" />
   {{/Layout}}
 </template>
