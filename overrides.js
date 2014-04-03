@@ -29,7 +29,6 @@ var findComponentOfKind = function (kind, comp) {
 // added a '__passthrough' property that allows helpers through
 findComponentWithHelper = function (id, comp) {
   while (comp) {
-    console.log(comp)
     if (comp.__helperHost) {
       if (typeof comp[id] !== 'undefined')
         return comp;
@@ -48,7 +47,6 @@ UI.Component.lookup = function (id, opts) {
   var self = this;
   var comp, result;
   
-  console.log(id)
   if (id === 'yield') {
     throw new Error("Sorry, would you mind using {{> yield}} instead of {{yield}}? It helps the Blaze engine.");
   } else if (id === 'contentFor') {
