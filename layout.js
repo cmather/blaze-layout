@@ -92,8 +92,6 @@ var lookupTemplate = function (name) {
 Layout = UI.Component.extend({
   kind: 'Layout',
 
-  __helperHost: true,
-
   init: function () {
     var self = this;
 
@@ -207,7 +205,7 @@ Layout = UI.Component.extend({
         if (_.isString(data))
           region = data;
         else if (_.isObject(data))
-          region = data.region;
+          region = data.region || 'main';
         else
           region = 'main';
 
