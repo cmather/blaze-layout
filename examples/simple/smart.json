@@ -1,0 +1,8 @@
+{
+  "packages": {
+    "blaze-layout": {
+      "path": "../.."
+    },
+    "iron-router": {}
+  }
+}

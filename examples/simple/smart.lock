@@ -1,0 +1,21 @@
+{
+  "meteor": {},
+  "dependencies": {
+    "basePackages": {
+      "blaze-layout": {
+        "path": "../.."
+      },
+      "iron-router": {}
+    },
+    "packages": {
+      "blaze-layout": {
+        "path": "../.."
+      },
+      "iron-router": {
+        "git": "https://github.com/EventedMind/iron-router.git",
+        "tag": "v0.7.0",
+        "commit": "05f34bc48c4cad9fdaa366c1ddcabe6980232ece"
+      }
+    }
+  }
+}
