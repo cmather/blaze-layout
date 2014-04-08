@@ -224,7 +224,6 @@ Tinytest.add('layout - region templates not found in lookup', function (test) {
 });
 
 
-
 // SEE IR#276 for detailed discussion
 Tinytest.add('layout - Templates render with correct data even if setData is called after setRegion', function (test) {
   withRenderedLayout({template: 'LayoutWithOneYield'}, function (layout, screen) {
@@ -242,5 +241,19 @@ Tinytest.add('layout - Templates render with correct data even if setData is cal
     layout.setData(true);
     Deps.flush();
     test.equal(screen.innerHTML.compact(), 'layoutcallback');
+
+Tinytest.add('layout - set data via with', function (test) {
+  withRenderedLayout({template: 'LayoutThatSetsData'}, function (layout, screen) {
+    layout.setRegion('main', 'ChildWithData');
+    
+    layout.setData({
+      title: 'parentTitle',
+      childData: {
+        title: 'childTitle'
+      }
+    });
+   
+    Deps.flush();
+    test.equal(screen.innerHTML.compact(), 'childchildTitle');
   });
 });

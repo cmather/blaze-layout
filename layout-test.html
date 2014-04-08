@@ -26,6 +26,12 @@ layout
 {{> yield region="footer"}}
 </template>
 
+<template name="LayoutThatSetsData">
+  {{#with childData}}
+    {{> yield}}
+  {{/with}}
+</template>
+
 <template name="ChildWithData">
 child {{title}}
 </template>
