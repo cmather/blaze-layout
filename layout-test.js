@@ -245,6 +245,7 @@ Tinytest.add('layout - Templates render with correct data even if setData is cal
 Tinytest.add('layout - set data via with', function (test) {
   withRenderedLayout({template: 'LayoutThatSetsData'}, function (layout, screen) {
     layout.setRegion('main', 'ChildWithData');
+    layout.setRegion('footer', 'FooterWithData');
     
     layout.setData({
       title: 'parentTitle',
@@ -252,8 +253,8 @@ Tinytest.add('layout - set data via with', function (test) {
         title: 'childTitle'
       }
     });
-   
+    
     Deps.flush();
-    test.equal(screen.innerHTML.compact(), 'childchildTitle');
+    test.equal(screen.innerHTML.compact(), 'childchildTitlefooterchildTitle');
   });
 });

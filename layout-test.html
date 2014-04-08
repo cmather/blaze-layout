@@ -30,6 +30,9 @@ layout
   {{#with childData}}
     {{> yield}}
   {{/with}}
+  {{#with childData}}
+    {{> yield region="footer"}}
+  {{/with}}
 </template>
 
 <template name="ChildWithData">
