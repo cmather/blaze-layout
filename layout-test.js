@@ -213,3 +213,19 @@ Tinytest.add('layout - region templates not found in lookup', function (test) {
     document.body.removeChild(div);
   }
 });
+
+Tinytest.add('layout - set data via with', function (test) {
+  withRenderedLayout({template: 'LayoutThatSetsData'}, function (layout, screen) {
+    layout.setRegion('main', 'ChildWithData');
+    
+    layout.setData({
+      title: 'parentTitle',
+      childData: {
+        title: 'childTitle'
+      }
+    });
+   
+    Deps.flush();
+    test.equal(screen.innerHTML.compact(), 'childchildTitle');
+  });
+});
