@@ -67,3 +67,11 @@ footer {{title}}
 <template name="TemplateWithCreatedCallback">
   callback
 </template>
+
+<template name="DefaultDataForLayout">
+  {{#with title="ok"}}
+    {{#Layout template="LayoutWithOneYield"}}
+      inner{{title}}
+    {{/Layout}}
+  {{/with}}
+</template>

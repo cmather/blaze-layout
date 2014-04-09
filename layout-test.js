@@ -98,6 +98,12 @@ Tinytest.add('layout - default main region using Layout template', function (tes
   });
 });
 
+Tinytest.add('layout - default data context using Layout template', function (test) {
+  withRenderedComponent(Template.DefaultDataForLayout, function (cmp, screen) {
+    test.equal(screen.innerHTML.compact(), 'layoutinnerok', 'default data context should be outer data context');
+  });
+});
+
 Tinytest.add('layout - dynamic yield regions', function (test) {
   withRenderedLayout({template: 'LayoutWithTwoYields'}, function (layout, screen) {
     var renderedCount = 1;
@@ -241,6 +247,8 @@ Tinytest.add('layout - Templates render with correct data even if setData is cal
     layout.setData(true);
     Deps.flush();
     test.equal(screen.innerHTML.compact(), 'layoutcallback');
+  });
+});
 
 Tinytest.add('layout - set data via with', function (test) {
   withRenderedLayout({template: 'LayoutThatSetsData'}, function (layout, screen) {
