@@ -104,7 +104,13 @@ Layout = UI.Component.extend({
     var tmplDep = new Deps.Dependency;
 
     // get the initial data value
-    var data = Deps.nonreactive(function () { return self.get(); });
+    var data = Deps.nonreactive(function () { 
+      // check parent incase we are rendered in isolation (e.g. by IR)
+      // -- we are assuming that the parent is a {{#with layoutTemplate=X
+      // so we want to skip past it for the data to be used by the yields
+      // see https://github.com/eventedmind/blaze-layout/issues/1
+      return (self.parent && self.parent.parent || self).get(); 
+    });
     var dataDep = new Deps.Dependency;
     var regions = this._regions = new ReactiveDict;
     var content = this.__content;

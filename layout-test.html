@@ -63,3 +63,11 @@ footer {{title}}
     footer
   {{/contentFor}}
 </template>
+
+<template name="DefaultDataForLayout">
+  {{#with title="ok"}}
+    {{#Layout template="LayoutWithOneYield"}}
+      inner{{title}}
+    {{/Layout}}
+  {{/with}}
+</template>
