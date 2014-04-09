@@ -109,7 +109,8 @@ Layout = UI.Component.extend({
       // -- we are assuming that the parent is a {{#with layoutTemplate=X
       // so we want to skip past it for the data to be used by the yields
       // see https://github.com/eventedmind/blaze-layout/issues/1
-      return (self.parent && self.parent.parent || self).get(); 
+      var component = self.parent && self.parent.parent && findComponentWithProp('data', self.parent.parent);
+      return (component || self).get();
     });
     var dataDep = new Deps.Dependency;
     var regions = this._regions = new ReactiveDict;
