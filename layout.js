@@ -111,7 +111,10 @@ Layout = UI.Component.extend({
     
     // look first in regions that have been explicitly set, then data
     var getRegion = function(region) {
-      return self._regions.get(region) || self.get(region);
+      // Embox it so yields don't re-render when it doesn't change.
+      return UI.emboxValue(function() {
+        return self._regions.get(region) || self.get(region);
+      })();
     }
     
     // a place to put content defined like this:
@@ -205,7 +208,6 @@ Layout = UI.Component.extend({
           region = 'main';
 
         self.region = region;
-        console.log('data', data)
         self.text = !! data.text;
 
         // reset the data function to use the layout's
@@ -227,11 +229,9 @@ Layout = UI.Component.extend({
           // create a reactive dep
           var tmpl = getRegion(region);
 
-          console.log(self.text)
           if (self.text)
             return tmpl;
 
-          console.log('looking for', tmpl)
           if (tmpl)
             return lookupTemplate.call(layout, tmpl);
           else if (region === 'main' && content) {
