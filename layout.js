@@ -108,7 +108,12 @@ Layout = UI.Component.extend({
     var dataDep = new Deps.Dependency;
     var regions = this._regions = new ReactiveDict;
     var content = this.__content;
-
+    
+    // look first in regions that have been explicitly set, then data
+    var getRegion = function(region) {
+      return self._regions.get(region) || self.get(region);
+    }
+    
     // a place to put content defined like this:
     // {{#contentFor region="footer"}}content{{/contentFor}}
     // this will be searched in the lookup chain.
@@ -200,6 +205,8 @@ Layout = UI.Component.extend({
           region = 'main';
 
         self.region = region;
+        console.log('data', data)
+        self.text = !! data.text;
 
         // reset the data function to use the layout's
         // data
@@ -217,10 +224,14 @@ Layout = UI.Component.extend({
         // changes, this comp will be rerun and the new template
         // will get put on the screen.
         return function () {
-          var regions = layout._regions;
           // create a reactive dep
-          var tmpl = regions.get(region);
+          var tmpl = getRegion(region);
 
+          console.log(self.text)
+          if (self.text)
+            return tmpl;
+
+          console.log('looking for', tmpl)
           if (tmpl)
             return lookupTemplate.call(layout, tmpl);
           else if (region === 'main' && content) {
@@ -231,6 +242,10 @@ Layout = UI.Component.extend({
         };
       }
     });
+    
+    this.hasYield = function(region) {
+      return !! getRegion(region);
+    };
 
     // render content into a yield region using markup. when you call setRegion
     // manually, you specify a string, not a content block. And the
