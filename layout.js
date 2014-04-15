@@ -208,7 +208,7 @@ Layout = UI.Component.extend({
           region = 'main';
 
         self.region = region;
-        self.text = !! data.text;
+        self.text = !! (data && data.text);
 
         // reset the data function to use the layout's
         // data
