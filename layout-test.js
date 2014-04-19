@@ -56,6 +56,15 @@ Tinytest.add('layout - rendering dynamic templates', function (test) {
   });
 });
 
+Tinytest.add('layout - setting undefined template', function (test) {
+  withRenderedLayout({template: 'LayoutOne'}, function (layout, screen) {
+    test.equal(screen.innerHTML.trim(), 'one', 'initial layout template not rendered');
+    layout.template(undefined);
+    Deps.flush();
+    test.equal(screen.innerHTML.trim(), '', 'Should use default layout');
+  });
+});
+
 Tinytest.add('layout - dynamic data', function (test) {
   withRenderedLayout({template: 'LayoutWithData'}, function (layout, screen) {
     var renderCount = 1;
