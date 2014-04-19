@@ -119,17 +119,8 @@ Layout = UI.Component.extend({
     */
 
     this.template = function (value) {
-      if (typeof value !== 'undefined') {
-
-        // make sure we convert false and null
-        // values to the _defaultLayout so when
-        // we compare to our existing template
-        // we don't re-render the default layout
-        // unnecessarily.
-        // XXX this is a problem becuase this _defaultLayout
-        // will never get found becuase it's a helper on the layout
-        // instance
-        if (value === false || value === null)
+      if (arguments.length > 0) {
+        if (!value)
           value = '_defaultLayout';
         
         if (!EJSON.equals(value, tmpl)) {
@@ -138,8 +129,6 @@ Layout = UI.Component.extend({
         }
       } else {
         tmplDep.depend();
-        //XXX changed to just return tmpl instead
-        //of a _defaultLayout
         return tmpl;
       }
     };
