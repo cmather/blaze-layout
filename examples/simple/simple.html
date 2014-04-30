@@ -7,16 +7,22 @@
 </body>
 
 <template name="layout">
-  <div class="layout">
-    {{layoutHelper}}
-    {{> yield}}
-  </div>
+  {{#with data='layoutData'}}
+    <div class="layout">
+      {{layoutHelper}}
+      {{data}}
+      {{> yield}}
+    </div>
+  {{/with}}
 </template>
 
 <template name="hello">
-  {{#Layout template='layout'}}
-    <h1>Hello World!</h1>
-    {{helloHelper}}
-    <input type="button" value="Click" />
-  {{/Layout}}
+  {{#with data='templateData'}}
+    {{#Layout template='layout'}}
+      <h1>Hello World!</h1>
+      {{helloHelper}}
+      {{data}}
+      <input type="button" value="Click" />
+    {{/Layout}}
+  {{/with}}
 </template>

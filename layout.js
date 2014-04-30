@@ -222,9 +222,9 @@ Layout = UI.Component.extend({
           var tmpl = regions.get(region);
 
           if (tmpl)
-            return lookupTemplate.call(layout, tmpl);
+            return UI.InTemplateScope(layout, lookupTemplate.call(layout, tmpl));
           else if (region === 'main' && content) {
-            return content;
+            return UI.InTemplateScope(layout, content);
           }
           else
             return null;
@@ -301,13 +301,8 @@ Layout = UI.Component.extend({
       if (tmplName === '_defaultLayout')
         return self._defaultLayout;
       else if (tmplName) {
-        var tmpl = lookupTemplate.call(self, tmplName);
-        // it's a component
-        if (typeof tmpl.instantiate === 'function')
-          tmpl.__helperHost = false;
-        return tmpl;
-      }
-      else {
+        return lookupTemplate.call(self, tmplName);
+      } else {
         return self['yield'];
       }
     };
