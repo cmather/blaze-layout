@@ -304,7 +304,7 @@ Layout = UI.Component.extend({
         var tmpl = lookupTemplate.call(self, tmplName);
         // it's a component
         if (typeof tmpl.instantiate === 'function')
-          tmpl.__passthrough = true;
+          tmpl.__helperHost = false;
         return tmpl;
       }
       else {
@@ -362,3 +362,50 @@ BlazeUIManager.prototype = {
     UI.DomRange.insert(this.render(props, parentComponent).dom, parentDom || document.body);
   }
 };
+
+var findComponentOfKind = function (kind, comp) {
+  while (comp) {
+    if (comp.kind === kind)
+      return comp;
+    comp = comp.parent;
+  }
+  return null;
+};
+
+// Override {{> yield}} and {{#contentFor}} to find the closest
+// enclosing layout
+var origLookup = UI.Component.lookup;
+UI.Component.lookup = function (id, opts) {
+  if (id === 'yield') {
+    throw new Error("Sorry, would you mind using {{> yield}} instead of {{yield}}? It helps the Blaze engine.");
+  } else if (id === 'contentFor') {
+    var layout = findComponentOfKind('Layout', this);
+    if (!layout)
+      throw new Error("Couldn't find a Layout component in the rendered component tree");
+    else {
+      return layout[id];
+    }
+  } else {
+    return origLookup.apply(this, arguments);
+  }
+};
+
+var origLookupTemplate = UI.Component.lookupTemplate;
+UI.Component.lookupTemplate = function (id, opts) {
+  if (id === 'yield') {
+    var layout = findComponentOfKind('Layout', this);
+    if (!layout)
+      throw new Error("Couldn't find a Layout component in the rendered component tree");
+    else {
+      return layout[id];
+    }
+  } else {
+    return origLookupTemplate.apply(this, arguments);
+  }
+};
+
+if (Package['iron-router']) {
+  Package['iron-router'].Router.configure({
+    uiManager: new BlazeUIManager
+  });
+}

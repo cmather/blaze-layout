@@ -11,7 +11,6 @@ Package.on_use(function (api) {
   api.use('deps-ext');
 
   api.add_files('layout.js', 'client');
-  api.add_files('overrides.js', 'client');
   api.export('Layout', 'client');
 });
 
