@@ -149,7 +149,6 @@ Layout = UI.Component.extend({
 
     this.getData = function () {
       var val = cachedData.get();
-      console.log('data val: ', val);
       return val;
     };
 
