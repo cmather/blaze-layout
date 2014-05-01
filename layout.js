@@ -160,10 +160,6 @@ Layout = UI.Component.extend({
       return val;
     };
 
-    this.data = function () {
-      return self.getData();
-    };
-
     /**
      * Set a region template.
      *
@@ -228,6 +224,7 @@ Layout = UI.Component.extend({
         return function () {
           // create a reactive dep
           var tmpl = getRegion(region);
+          log('rendering yield', region, tmpl)
 
           if (self.text)
             return tmpl;
@@ -304,38 +301,40 @@ Layout = UI.Component.extend({
 
   render: function () {
     var self = this;
-    // return a function to create a reactive
-    // computation. so if the template changes
-    // the layout is re-endered.
-    return function () {
-      // reactive
-      var tmplName = self.template();
+    return UI.With(_.bind(self.getData, self), UI.block(function () {
+      // return a function to create a reactive
+      // computation. so if the template changes
+      // the layout is re-endered.
+      return function() {
+        // reactive
+        var tmplName = self.template();
 
-      //XXX hack to make work with null/false values.
-      //see this.template = in ctor function.
-      if (tmplName === '_defaultLayout')
-        return self._defaultLayout;
-      else if (tmplName) {
-        var tmpl = lookupTemplate.call(self, tmplName);
-        // it's a component
-        if (typeof tmpl.instantiate === 'function')
-          // See how __pasthrough is used in overrides.js
-          // findComponentWithHelper. If __passthrough is true
-          // then we'll continue past this component in looking
-          // up a helper method. This allows this use case:
-          // <template name="SomeParent">
-          //  {{#Layout template="SomeLayout"}}
-          //    I want a helper method on SomeParent
-          //    called {{someHelperMethod}}
-          //  {{/Layout}}
-          // </template>
-          tmpl.__passthrough = true;
-        return tmpl;
+        //XXX hack to make work with null/false values.
+        //see this.template = in ctor function.
+        if (tmplName === '_defaultLayout')
+          return self._defaultLayout;
+        else if (tmplName) {
+          var tmpl = lookupTemplate.call(self, tmplName);
+          // it's a component
+          if (typeof tmpl.instantiate === 'function')
+            // See how __pasthrough is used in overrides.js
+            // findComponentWithHelper. If __passthrough is true
+            // then we'll continue past this component in looking
+            // up a helper method. This allows this use case:
+            // <template name="SomeParent">
+            //  {{#Layout template="SomeLayout"}}
+            //    I want a helper method on SomeParent
+            //    called {{someHelperMethod}}
+            //  {{/Layout}}
+            // </template>
+            tmpl.__passthrough = true;
+          return tmpl;
+        }
+        else {
+          return self['yield'];
+        }
       }
-      else {
-        return self['yield'];
-      }
-    };
+    }));
   }
 });
 
