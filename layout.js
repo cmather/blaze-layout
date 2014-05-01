@@ -110,11 +110,13 @@ Layout = UI.Component.extend({
     var content = this.__content;
     
     // look first in regions that have been explicitly set, then data
+    var regionCaches = {};
     var getRegion = function(region) {
-      // Embox it so yields don't re-render when it doesn't change.
-      return UI.emboxValue(function() {
+      regionCaches[region] = regionCaches[region] || Deps.cache(function () {
         return self._regions.get(region) || self.get(region);
-      })();
+      });
+      
+      return regionCaches[region].get()
     }
     
     // a place to put content defined like this:
