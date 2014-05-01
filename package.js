@@ -8,6 +8,7 @@ Package.on_use(function (api) {
   api.use('ui');
   api.use('reactive-dict');
   api.use('underscore');
+  api.use('deps-ext');
 
   api.add_files('layout.js', 'client');
   api.add_files('overrides.js', 'client');

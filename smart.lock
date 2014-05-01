@@ -9,6 +9,11 @@
     "packages": {
       "blaze-layout": {
         "path": "."
+      },
+      "deps-ext": {
+        "git": "https://github.com/EventedMind/deps-ext.git",
+        "branch": "master",
+        "commit": "f1b2008794424b0fe195908f6d6d42e8a9566e73"
       }
     }
   }

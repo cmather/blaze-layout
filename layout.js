@@ -133,7 +133,7 @@ Layout = UI.Component.extend({
       }
     };
 
-    var emboxedData = UI.emboxValue(function () {
+    var cachedData = Deps.cache(function () {
       log('return data()');
       dataDep.depend();
       return data;
@@ -148,7 +148,9 @@ Layout = UI.Component.extend({
     };
 
     this.getData = function () {
-      return emboxedData();
+      var val = cachedData.get();
+      console.log('data val: ', val);
+      return val;
     };
 
     this.data = function () {
