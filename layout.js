@@ -69,7 +69,13 @@ var lookupTemplate = function (name) {
     throw new Error("BlazeLayout: You must pass a name to lookupTemplate");
 
   if (contentBlocksByRegion[name]) {
-    result = contentBlocksByRegion[name];
+    console.log(self, self.parent)
+    if (self.parent)
+      result = UI.InTemplateScope(self, contentBlocksByRegion[name]);
+    else
+      // XXX: this is really only for the test where we render the layout in
+      // isolation, without a parent. @cmather -- we should fix this.
+      result = contentBlocksByRegion[name];
   } else if ((comp = findComponentWithProp(name, self))) {
     result = comp[name];
   } else if (_.has(Template, name)) {
@@ -107,8 +113,7 @@ Layout = UI.Component.extend({
     var data = Deps.nonreactive(function () { return self.get(); });
     var dataDep = new Deps.Dependency;
     var regions = this._regions = new ReactiveDict;
-    var content = this.__content;
-
+    
     // a place to put content defined like this:
     // {{#contentFor region="footer"}}content{{/contentFor}}
     // this will be searched in the lookup chain.
@@ -220,12 +225,9 @@ Layout = UI.Component.extend({
           var regions = layout._regions;
           // create a reactive dep
           var tmpl = regions.get(region);
-
+          
           if (tmpl)
-            return UI.InTemplateScope(layout, lookupTemplate.call(layout, tmpl));
-          else if (region === 'main' && content) {
-            return UI.InTemplateScope(layout, content);
-          }
+            return lookupTemplate.call(layout, tmpl);
           else
             return null;
         };
@@ -260,15 +262,9 @@ Layout = UI.Component.extend({
         var self = this;
         var region = self.region;
 
-        var contentBlocksByRegion = layout._contentBlocksByRegion;
-
-        if (contentBlocksByRegion[region]) {
-          delete contentBlocksByRegion[region];
-        }
-
         // store away the content block so we can find it during lookup
         // which happens in the yield function.
-        contentBlocksByRegion[region] = self.__content;
+        layout._contentBlocksByRegion[region] = self.__content;
 
         // this will just set the region to itself but when the lookupTemplate
         // function searches it will check contentBlocksByRegion first, so we'll
@@ -293,6 +289,12 @@ Layout = UI.Component.extend({
     // computation. so if the template changes
     // the layout is re-endered.
     return function () {
+      // store away the main content block so we can find it during lookup too
+      if (self.__content) {
+        self._contentBlocksByRegion.main = self.__content;
+        self.setRegion('main', 'main');
+      }
+      
       // reactive
       var tmplName = self.template();
 
@@ -375,6 +377,7 @@ UI.Component.lookup = function (id, opts) {
     throw new Error("Sorry, would you mind using {{> yield}} instead of {{yield}}? It helps the Blaze engine.");
   } else if (id === 'contentFor') {
     var layout = findComponentOfKind('Layout', this);
+    console.log(id, layout, this)
     if (!layout)
       throw new Error("Couldn't find a Layout component in the rendered component tree");
     else {

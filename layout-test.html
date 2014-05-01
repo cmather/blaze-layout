@@ -48,9 +48,26 @@ footer {{title}}
   {{/Layout}}
 </template>
 
+<template name="DefaultMainRegionWithData">
+  {{#with property='good'}}
+    {{#Layout template="LayoutWithOneYield"}}
+      {{property}}
+    {{/Layout}}
+  {{/with}}
+</template>
+
 <template name="ContentForTests">
   main
   {{#contentFor region="footer"}}
     footer
   {{/contentFor}}
+</template>
+
+
+<template name="ContentForWithData">
+  {{#with property='good'}}
+    {{#Layout template="LayoutWithTwoYields"}}
+      {{#contentFor region='footer'}}{{property}}{{/contentFor}}
+    {{/Layout}}
+  {{/with}}
 </template>
