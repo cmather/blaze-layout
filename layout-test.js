@@ -222,3 +222,23 @@ Tinytest.add('layout - region templates not found in lookup', function (test) {
     document.body.removeChild(div);
   }
 });
+
+
+Tinytest.add('layout - set regions via arguments - static', function (test) {
+  withRenderedLayout({template: 'RegionArgumentsTestStatic'}, function (layout, screen) {
+    test.equal(screen.innerHTML.compact(), 'insideone', 'One template should render into footer region');
+  });
+});
+
+Tinytest.add('layout - set regions via arguments - dynamic', function (test) {
+  var footerTemplate = new ReactiveVar('One');
+  Template.RegionArgumentsTestDynamic.footerHelper = function() { return footerTemplate.get(); }
+  
+  withRenderedLayout({template: 'RegionArgumentsTestDynamic'}, function (layout, screen) {
+    test.equal(screen.innerHTML.compact(), 'insideone', 'One template should render into footer region');
+    
+    footerTemplate.set('Two');
+    Deps.flush()
+    test.equal(screen.innerHTML.compact(), 'insidetwo', 'Two template should render into footer region');
+  });
+});

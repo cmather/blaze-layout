@@ -54,3 +54,15 @@ footer {{title}}
     footer
   {{/contentFor}}
 </template>
+
+<template name="RegionArgumentsTestStatic">
+  {{#Layout template='LayoutWithTwoYields' footer='One'}}
+    inside
+  {{/Layout}}
+</template>
+
+<template name="RegionArgumentsTestDynamic">
+  {{#Layout template='LayoutWithTwoYields' footer=footerHelper}}
+    inside
+  {{/Layout}}
+</template>
