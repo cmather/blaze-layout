@@ -98,6 +98,19 @@ Tinytest.add('layout - default main region using Layout template', function (tes
   });
 });
 
+Tinytest.add('layout - default main region using Layout template should pickup data from context', function (test) {
+  withRenderedComponent(Template.DefaultMainRegionWithData, function (cmp, screen) {
+    test.equal(screen.innerHTML.compact(), 'layoutgood', 'default main region should be __content and inherit data');
+  });
+});
+
+Tinytest.add('layout - contentFor region using Layout template should pickup data from context', function (test) {
+  console.log('here')
+  withRenderedComponent(Template.ContentForWithData, function (cmp, screen) {
+    test.equal(screen.innerHTML.compact(), 'good', 'region should be contentFor and inherit data');
+  });
+});
+
 Tinytest.add('layout - dynamic yield regions', function (test) {
   withRenderedLayout({template: 'LayoutWithTwoYields'}, function (layout, screen) {
     var renderedCount = 1;
