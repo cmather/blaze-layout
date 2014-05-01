@@ -32,10 +32,6 @@ findComponentWithHelper = function (id, comp) {
     if (comp.__helperHost) {
       if (typeof comp[id] !== 'undefined')
         return comp;
-
-      // if __pasthrough == true on the component we will continue
-      // looking up the parent chain to find a component with the
-      // property of <id>. Otherwise just halt right now and return null.
       else if (! comp.__passthrough)
         return null;
     }

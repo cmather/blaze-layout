@@ -304,16 +304,6 @@ Layout = UI.Component.extend({
         var tmpl = lookupTemplate.call(self, tmplName);
         // it's a component
         if (typeof tmpl.instantiate === 'function')
-          // See how __pasthrough is used in overrides.js
-          // findComponentWithHelper. If __passthrough is true
-          // then we'll continue past this component in looking
-          // up a helper method. This allows this use case:
-          // <template name="SomeParent">
-          //  {{#Layout template="SomeLayout"}}
-          //    I want a helper method on SomeParent
-          //    called {{someHelperMethod}}
-          //  {{/Layout}}
-          // </template>
           tmpl.__passthrough = true;
         return tmpl;
       }
