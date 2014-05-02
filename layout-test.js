@@ -222,3 +222,25 @@ Tinytest.add('layout - region templates not found in lookup', function (test) {
     document.body.removeChild(div);
   }
 });
+
+
+
+// SEE IR#276 for detailed discussion
+Tinytest.add('layout - Templates render with correct data even if setData is called after setRegion', function (test) {
+  withRenderedLayout({template: 'LayoutWithOneYield'}, function (layout, screen) {
+    Template.TemplateWithHelper = function() {};
+    layout.setData(false);
+    layout.setRegion('One');
+    Deps.flush();
+    test.equal(screen.innerHTML.compact(), 'layoutone');
+    
+    Template.TemplateWithCreatedCallback.created = function() {
+      test.equal(this.data, true);
+    }
+    
+    layout.setRegion('TemplateWithCreatedCallback');
+    layout.setData(true);
+    Deps.flush();
+    test.equal(screen.innerHTML.compact(), 'layoutcallback');
+  });
+});
