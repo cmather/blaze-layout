@@ -98,6 +98,12 @@ Tinytest.add('layout - default main region using Layout template', function (tes
   });
 });
 
+Tinytest.add('layout - default data context using Layout template', function (test) {
+  withRenderedComponent(Template.DefaultDataForLayout, function (cmp, screen) {
+    test.equal(screen.innerHTML.compact(), 'layoutinnerok', 'default data context should be outer data context');
+  });
+});
+
 Tinytest.add('layout - dynamic yield regions', function (test) {
   withRenderedLayout({template: 'LayoutWithTwoYields'}, function (layout, screen) {
     var renderedCount = 1;
@@ -224,7 +230,6 @@ Tinytest.add('layout - region templates not found in lookup', function (test) {
 });
 
 
-
 // SEE IR#276 for detailed discussion
 Tinytest.add('layout - Templates render with correct data even if setData is called after setRegion', function (test) {
   withRenderedLayout({template: 'LayoutWithOneYield'}, function (layout, screen) {
@@ -244,3 +249,26 @@ Tinytest.add('layout - Templates render with correct data even if setData is cal
     test.equal(screen.innerHTML.compact(), 'layoutcallback');
   });
 });
+
+// XXX: This test doesn't work. 
+// To be totally honest, I'm not sure how it *should* work -- should
+// the yield be getting the data context of the with block? Maybe..
+// perhaps yield.data() should look at parent's data (modolo __isTemplateWith)
+// just like layout does.
+// 
+// Tinytest.add('layout - set data via with', function (test) {
+//   withRenderedLayout({template: 'LayoutThatSetsData'}, function (layout, screen) {
+//     layout.setRegion('main', 'ChildWithData');
+//     layout.setRegion('footer', 'FooterWithData');
+//     
+//     layout.setData({
+//       title: 'parentTitle',
+//       childData: {
+//         title: 'childTitle'
+//       }
+//     });
+//     
+//     Deps.flush();
+//     test.equal(screen.innerHTML.compact(), 'childchildTitlefooterchildTitle');
+//   });
+// });
