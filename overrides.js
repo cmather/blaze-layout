@@ -53,7 +53,7 @@ UI.Component.lookup = function (id, opts) {
   
   if (id === 'yield') {
     throw new Error("Sorry, would you mind using {{> yield}} instead of {{yield}}? It helps the Blaze engine.");
-  } else if (id === 'contentFor') {
+  } else if (id === 'contentFor'  || id === 'hasYield') {
     var layout = findComponentOfKind('Layout', this);
     if (!layout)
       throw new Error("Couldn't find a Layout component in the rendered component tree");

@@ -104,11 +104,21 @@ Layout = UI.Component.extend({
     var tmplDep = new Deps.Dependency;
 
     // get the initial data value
-    var data = Deps.nonreactive(function () { return self.get(); });
+    var data, dataSet = false;
     var dataDep = new Deps.Dependency;
     var regions = this._regions = new ReactiveDict;
     var content = this.__content;
-
+    
+    // look first in regions that have been explicitly set, then data
+    var regionCaches = {};
+    var getRegion = function(region) {
+      regionCaches[region] = regionCaches[region] || Deps.cache(function () {
+        return self._regions.get(region) || self.get(region);
+      });
+      
+      return regionCaches[region].get()
+    }
+    
     // a place to put content defined like this:
     // {{#contentFor region="footer"}}content{{/contentFor}}
     // this will be searched in the lookup chain.
@@ -134,13 +144,28 @@ Layout = UI.Component.extend({
     };
 
     var cachedData = Deps.cache(function () {
-      log('return data()');
       dataDep.depend();
-      return data;
+      if (dataSet) {
+        return data;
+      } else {
+        // find the closest parent with a data context.
+        // If it's the direct parent, and it has `__isTemplateWith` set, 
+        // then it's because we have `{{#Layout foo=bar}}` and we should ignore
+        var parent = self.parent;
+        if (parent) {
+          if (parent.__isTemplateWith)
+            parent = parent.parent;
+          return getComponentData(parent);
+        } else {
+          // the only time we don't have a parent is when we are in tests really
+          return null
+        }
+      }
     });
 
     this.setData = function (value) {
-      log('setData', value);
+      dataSet = true;
+      log('setData', EJSON.stringify(value, 2));
       if (!EJSON.equals(value, data)) {
         data = value;
         dataDep.changed();
@@ -149,11 +174,8 @@ Layout = UI.Component.extend({
 
     this.getData = function () {
       var val = cachedData.get();
+      log('return data()', EJSON.stringify(val, 2));
       return val;
-    };
-
-    this.data = function () {
-      return self.getData();
     };
 
     /**
@@ -164,6 +186,7 @@ Layout = UI.Component.extend({
      *
      */
     this.setRegion = function (key, value) {
+      log('setRegion', key, value);
       if (arguments.length < 2) {
         value = key;
         key = 'main';
@@ -200,10 +223,17 @@ Layout = UI.Component.extend({
           region = 'main';
 
         self.region = region;
+        self.text = !! (data && data.text);
 
         // reset the data function to use the layout's
         // data
         this.data = function () {
+          // XXX: should we be instead trying to sensibly get parent's
+          // data -- much like layout.getData() does? 
+          // then we'd expect to inherit layout.getData() (via layout.render)
+          // unless we wrapped our {{> yield}} in a with. 
+          // is this what users would expect?
+          // see 'layout - set data via with' test
           return layout.getData();
         };
       },
@@ -217,9 +247,12 @@ Layout = UI.Component.extend({
         // changes, this comp will be rerun and the new template
         // will get put on the screen.
         return function () {
-          var regions = layout._regions;
           // create a reactive dep
-          var tmpl = regions.get(region);
+          var tmpl = getRegion(region);
+          log('rendering yield', region, tmpl)
+
+          if (self.text)
+            return tmpl;
 
           if (tmpl)
             return lookupTemplate.call(layout, tmpl);
@@ -231,6 +264,10 @@ Layout = UI.Component.extend({
         };
       }
     });
+    
+    this.hasYield = function(region) {
+      return !! getRegion(region);
+    };
 
     // render content into a yield region using markup. when you call setRegion
     // manually, you specify a string, not a content block. And the
@@ -289,38 +326,40 @@ Layout = UI.Component.extend({
 
   render: function () {
     var self = this;
-    // return a function to create a reactive
-    // computation. so if the template changes
-    // the layout is re-endered.
-    return function () {
-      // reactive
-      var tmplName = self.template();
+    return UI.With(_.bind(self.getData, self), UI.block(function () {
+      // return a function to create a reactive
+      // computation. so if the template changes
+      // the layout is re-endered.
+      return function() {
+        // reactive
+        var tmplName = self.template();
 
-      //XXX hack to make work with null/false values.
-      //see this.template = in ctor function.
-      if (tmplName === '_defaultLayout')
-        return self._defaultLayout;
-      else if (tmplName) {
-        var tmpl = lookupTemplate.call(self, tmplName);
-        // it's a component
-        if (typeof tmpl.instantiate === 'function')
-          // See how __pasthrough is used in overrides.js
-          // findComponentWithHelper. If __passthrough is true
-          // then we'll continue past this component in looking
-          // up a helper method. This allows this use case:
-          // <template name="SomeParent">
-          //  {{#Layout template="SomeLayout"}}
-          //    I want a helper method on SomeParent
-          //    called {{someHelperMethod}}
-          //  {{/Layout}}
-          // </template>
-          tmpl.__passthrough = true;
-        return tmpl;
+        //XXX hack to make work with null/false values.
+        //see this.template = in ctor function.
+        if (tmplName === '_defaultLayout')
+          return self._defaultLayout;
+        else if (tmplName) {
+          var tmpl = lookupTemplate.call(self, tmplName);
+          // it's a component
+          if (typeof tmpl.instantiate === 'function')
+            // See how __pasthrough is used in overrides.js
+            // findComponentWithHelper. If __passthrough is true
+            // then we'll continue past this component in looking
+            // up a helper method. This allows this use case:
+            // <template name="SomeParent">
+            //  {{#Layout template="SomeLayout"}}
+            //    I want a helper method on SomeParent
+            //    called {{someHelperMethod}}
+            //  {{/Layout}}
+            // </template>
+            tmpl.__passthrough = true;
+          return tmpl;
+        }
+        else {
+          return self['yield'];
+        }
       }
-      else {
-        return self['yield'];
-      }
-    };
+    }));
   }
 });
 
