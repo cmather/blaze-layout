@@ -165,7 +165,7 @@ Layout = UI.Component.extend({
 
     this.setData = function (value) {
       dataSet = true;
-      log('setData', EJSON.stringify(value, 2).substring(0, 40));
+      log('setData', EJSON.stringify(value, 2));
       if (!EJSON.equals(value, data)) {
         data = value;
         dataDep.changed();
@@ -174,7 +174,7 @@ Layout = UI.Component.extend({
 
     this.getData = function () {
       var val = cachedData.get();
-      log('return data()', EJSON.stringify(val, 2).substring(0, 40));
+      log('return data()', EJSON.stringify(val, 2));
       return val;
     };
 
