@@ -104,7 +104,7 @@ Layout = UI.Component.extend({
     var tmplDep = new Deps.Dependency;
 
     // get the initial data value
-    var data = Deps.nonreactive(function () { return self.get(); });
+    var data, dataSet = false;
     var dataDep = new Deps.Dependency;
     var regions = this._regions = new ReactiveDict;
     var content = this.__content;
@@ -146,10 +146,26 @@ Layout = UI.Component.extend({
     var cachedData = Deps.cache(function () {
       log('return data()');
       dataDep.depend();
-      return data;
+      if (dataSet) {
+        return data;
+      } else {
+        // find the closest parent with a data context.
+        // If it's the direct parent, and it has `__isTemplateWith` set, 
+        // then it's because we have `{{#Layout foo=bar}}` and we should ignore
+        var parent = self.parent;
+        if (parent) {
+          if (parent.__isTemplateWith)
+            parent = parent.parent;
+          return getComponentData(parent);
+        } else {
+          // the only time we don't have a parent is when we are in tests really
+          return null
+        }
+      }
     });
 
     this.setData = function (value) {
+      dataSet = true;
       log('setData', value);
       if (!EJSON.equals(value, data)) {
         data = value;
@@ -211,6 +227,12 @@ Layout = UI.Component.extend({
         // reset the data function to use the layout's
         // data
         this.data = function () {
+          // XXX: should we be instead trying to sensibly get parent's
+          // data -- much like layout.getData() does? 
+          // then we'd expect to inherit layout.getData() (via layout.render)
+          // unless we wrapped our {{> yield}} in a with. 
+          // is this what users would expect?
+          // see 'layout - set data via with' test
           return layout.getData();
         };
       },

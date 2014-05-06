@@ -26,6 +26,15 @@ layout
 {{> yield region="footer"}}
 </template>
 
+<template name="LayoutThatSetsData">
+  {{#with childData}}
+    {{> yield}}
+  {{/with}}
+  {{#with childData}}
+    {{> yield region="footer"}}
+  {{/with}}
+</template>
+
 <template name="ChildWithData">
 child {{title}}
 </template>
@@ -65,4 +74,16 @@ footer {{title}}
   {{#Layout template='LayoutWithTwoYields' footer=footerHelper}}
     inside
   {{/Layout}}
+</template>
+
+<template name="TemplateWithCreatedCallback">
+  callback
+</template>
+
+<template name="DefaultDataForLayout">
+  {{#with title="ok"}}
+    {{#Layout template="LayoutWithOneYield"}}
+      inner{{title}}
+    {{/Layout}}
+  {{/with}}
 </template>
