@@ -144,7 +144,6 @@ Layout = UI.Component.extend({
     };
 
     var cachedData = Deps.cache(function () {
-      log('return data()');
       dataDep.depend();
       if (dataSet) {
         return data;
@@ -166,7 +165,7 @@ Layout = UI.Component.extend({
 
     this.setData = function (value) {
       dataSet = true;
-      log('setData', value);
+      log('setData', EJSON.stringify(value, 2).substring(0, 40));
       if (!EJSON.equals(value, data)) {
         data = value;
         dataDep.changed();
@@ -175,6 +174,7 @@ Layout = UI.Component.extend({
 
     this.getData = function () {
       var val = cachedData.get();
+      log('return data()', EJSON.stringify(val, 2).substring(0, 40));
       return val;
     };
 
@@ -186,6 +186,7 @@ Layout = UI.Component.extend({
      *
      */
     this.setRegion = function (key, value) {
+      log('setRegion', key, value);
       if (arguments.length < 2) {
         value = key;
         key = 'main';
