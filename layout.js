@@ -133,23 +133,14 @@ Layout = UI.Component.extend({
       }
     };
 
-    var cachedData = Deps.cache(function () {
-      log('return data()');
-      dataDep.depend();
-      return data;
-    });
+    var dataValue = new ReactiveValue(data);
 
     this.setData = function (value) {
-      log('setData', value);
-      if (!EJSON.equals(value, data)) {
-        data = value;
-        dataDep.changed();
-      }
+      dataValue.set(value);
     };
 
     this.getData = function () {
-      var val = cachedData.get();
-      return val;
+      return dataValue.get();
     };
 
     this.data = function () {
