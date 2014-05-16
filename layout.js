@@ -363,7 +363,9 @@ BlazeUIManager = function (router) {
 
 BlazeUIManager.prototype = {
   render: function (props, parentComponent) {
-    this._component = UI.render(Layout.extend(props || {}), parentComponent || UI.body);
+    // this._component = UI.render(Layout.extend(props || {}), parentComponent || UI.body);
+    var bodyLayout = UI.body.extend(Layout);
+    this._component = UI.render(bodyLayout.extend(props || {}), parentComponent || UI.body);
     return this._component;
   },
 
